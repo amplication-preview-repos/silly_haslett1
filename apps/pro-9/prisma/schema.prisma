@@ -1,0 +1,132 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DB_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Federation {
+  id           String        @id @default(cuid())
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  associations Association[]
+  salaries     Salarie[]
+  utilisateurs Utilisateur[]
+}
+
+model Association {
+  id           String        @id @default(cuid())
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  federation   Federation?   @relation(fields: [federationId], references: [id])
+  federationId String?
+  domaines     Domaine[]
+  affectations Affectation[]
+}
+
+model Domaine {
+  id            String       @id @default(cuid())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  association   Association? @relation(fields: [associationId], references: [id])
+  associationId String?
+}
+
+model Adresse {
+  id                  String              @id @default(cuid())
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  debutValidite       DateTime?
+  finValidite         DateTime?
+  informationPostale  InformationPostale?
+  salariesDomiciliees Salarie[]           @relation(name: "domiciliation")
+  salarieesHebergees  Salarie[]           @relation(name: "demenagement")
+}
+
+model Utilisateur {
+  id           String                   @id @default(cuid())
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  civilite     EnumUtilisateurCivilite?
+  email        String?
+  federation   Federation?              @relation(fields: [federationId], references: [id])
+  federationId String?
+}
+
+model Identite {
+  id                String                @id @default(cuid())
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  codeLieuNaissance String?
+  civilite          EnumIdentiteCivilite?
+  salarie           Salarie?
+}
+
+model Telecom {
+  id          String               @id @default(cuid())
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  typeMoyen   EnumTelecomTypeMoyen
+  salarie     Salarie?             @relation(fields: [salarieId], references: [id])
+  salarieId   String?
+  valeurMoyen String
+}
+
+model InformationPostale {
+  id               String   @id @default(cuid())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  ancienCogCommune String?
+  cogCommune       String?
+  adresses         Adresse  @relation(fields: [adressesId], references: [id])
+  adressesId       String   @unique
+}
+
+model Affectation {
+  id            String                   @id @default(cuid())
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+  activite      EnumAffectationActivite?
+  salarie       Salarie?                 @relation(fields: [salarieId], references: [id])
+  salarieId     String?
+  association   Association?             @relation(fields: [associationId], references: [id])
+  associationId String?
+}
+
+model Salarie {
+  id            String        @id @default(cuid())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  identite      Identite?     @relation(fields: [identiteId], references: [id])
+  identiteId    String?       @unique
+  telecoms      Telecom[]
+  affectations  Affectation[]
+  domiciliation Adresse       @relation(name: "domiciliation", fields: [domiciliation], references: [id])
+  domiciliation String
+  federation    Federation[]
+  demenagement  Adresse?      @relation(name: "demenagement", fields: [demenagement], references: [id])
+  demenagement  String?
+}
+
+enum EnumUtilisateurCivilite {
+  Option1
+}
+
+enum EnumIdentiteCivilite {
+  Option1
+}
+
+enum EnumTelecomTypeMoyen {
+  tel
+  telmob
+  telpro
+  email
+}
+
+enum EnumAffectationActivite {
+  aide
+  soin
+  repas
+}
